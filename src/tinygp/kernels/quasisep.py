@@ -992,8 +992,8 @@ def _safe_sqrt_jvp(xpack: JAXArray, vpack: JAXArray) -> JAXArray:
     x, = xpack
     v, = vpack
     f = _safe_sqrt(x)
-    df = v * lax.cond( jnp.any(x) > 0.0,
-                       lambda x: 0.5/jnp.sqrt(x),
-                       lambda x: jnp.array([0.0]),
-                       x )           
+    cond = lambda x: jax.lax.cond(x > 0, lambda x: 0.5/jnp.sqrt(x),
+                       lambda x: 0.0, x)
+    vcond = jax.vmap(cond)
+    df = v * vcond(x)        
     return f, df
